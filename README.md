@@ -54,15 +54,15 @@ Interact with the chatbot by typing messages or clicking suggestion buttons.
 
 File Structure
 techno-support-bot/
-├── static/               # Static files (CSS, JS)
-├── templates/            # HTML templates
-│   └── index.html        # Main chat interface
-├── chatbot_model.h5      # Trained neural network model
-├── classes.pkl           # Pickled class labels
-├── words.pkl             # Pickled vocabulary
-├── intents.json          # Training data (patterns and responses)
-├── Flask_App.py          # Flask application
-└── requirements.txt      # Python dependencies
+├── static/               
+├── templates/           
+│   └── index.html      
+├── chatbot_model.h5     
+├── classes.pkl          
+├── words.pkl             
+├── intents.json          
+├── Flask_App.py          
+└── requirements.txt      
 Training the Model
 Update intents.json with your new data.
 Run the chatbot.ipynb notebook to retrain the model.
