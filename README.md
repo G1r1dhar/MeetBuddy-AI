@@ -47,8 +47,6 @@ Techno Support Bot is an AI-powered chatbot designed to automate support and ans
 python Flask_App.py
 Open your web browser and navigate to
 
-Arduino
-
 http://localhost:5000
 Interact with the chatbot by typing messages or clicking suggestion buttons.
 
