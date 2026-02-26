@@ -13,27 +13,18 @@
 
 ---
 
-## 🌟 Overview
-
-**MeetBuddy AI** is a cutting-edge, full-stack application designed to transform your meeting productivity. By integrating with major platforms like **Google Meet, Zoom, and Microsoft Teams**, it captures high-fidelity live transcripts and uses advanced AI to distill them into actionable summaries and insights.
-
 ---
 
 ## ✨ Key Features
 
-### 🤖 AI-Powered Intelligence
-- **Smart Summarization**: Automatically generate executive summaries, key decisions, and action items using OpenAI's GPT models.
-- **Mind Map Generation**: Visualize meeting connections and topic flow.
+### 🤖 Local AI Intelligence
+- **Offline Summarization**: Generate meeting summaries, key points, and action items locally using **DistilBART-CNN** without external API costs.
+- **Smart Insights**: Automatically identifies topics and next steps based on meeting context.
 
 ### 🎙️ Advanced Transcription
-- **Whisper Integration**: High-accuracy local and cloud-based transcription using OpenAI's Whisper models.
-- **Speaker Identification**: Clearly distinguish who said what throughout the session.
-- **Confidence Scoring**: Real-time feedback on transcription accuracy.
-
-### 📊 Professional Management
-- **Centralized Dashboard**: A "single pane of glass" for all your past and live meetings.
-- **Admin Analytics**: Comprehensive monitoring of system usage, transcription volume, and user activity.
-- **Search & Filter**: Find exactly what was said months ago in seconds.
+- **Hybrid Engine**: Seamlessly switches between high-accuracy **Whisper Large (Colab/GPU)** and efficient **Whisper Base (Local)**.
+- **Privacy First**: Audio is processed locally/privately using **Transformers.js**, ensuring your data never leaves your infrastructure unless manually offloaded to GPU.
+- **Speaker Identification**: Clearly distinguish contributors with real-time confidence scoring.
 
 ---
 
@@ -41,37 +32,43 @@
 
 ```mermaid
 graph TD
-    A[Meeting Platform] -->|Audio Stream| B{MeetBuddy Node}
-    B -->|Local Buffer| C[Whisper Service]
-    C -->|Text Segments| D[Live Transcript UI]
-    C -->|Complete Text| E[OpenAI Summarizer]
-    E -->|JSON Data| F[Database]
-    F -->|Persistence| G[User Dashboard]
+    A[Meeting Platform] -->|Audio Stream| B{MeetBuddy Backend}
+    B -->|WAV Conversion| C[FFmpeg Stream]
+    C -->|Primary Path| D[Colab GPU: Whisper Large]
+    C -->|Local Fallback| E[Transformers.js: Whisper Base]
+    D & E -->|Text Segments| F[Socket.io: Live UI]
+    F -->|Final Text| G[DistilBART: Local Summary]
+    G -->|JSON State| H[(SQLite / Prisma)]
+    H -->|Persistence| I[User Dashboard]
     
-    style B fill:#f9f,stroke:#333,stroke-width:4px
-    style E fill:#00ff00,stroke:#333
+    style B fill:#3b82f6,color:#fff
+    style G fill:#10b981,color:#fff
+    style D fill:#f59e0b,color:#fff
 ```
 
 ---
 
 ## 🚀 Tech Stack
 
-| Frontend | Backend | AI & Infrastructure |
+| Component | Technology | Role |
 | :--- | :--- | :--- |
-| **React 18** (TS) | **Node.js** (Express) | **OpenAI API** |
-| **Vite** | **TypeScript** | **Whisper (Local/Colab)** |
-| **Tailwind CSS** | **PostgreSQL** (Prisma) | **Socket.io** |
-| **React Query** | **Redis** | **Docker** |
+| **Frontend** | React 18 / Vite | Modern UI & Fast HMR |
+| **Backend** | Node.js / Express | Robust API & Orchestration |
+| **Real-Time** | Socket.io | Bi-directional Live Streaming |
+| **Database** | SQLite / Prisma | Lightweight & Reliable Storage |
+| **Transcription** | Transformers.js | **Whisper-Base.en** (Local) |
+| **GPU Backend** | FastAPI / Colab | **Whisper-Large-v3** (Cloud) |
+| **Summarization** | DistilBART | **distilbart-cnn-6-6** (Local) |
+| **Audio Ops** | FFmpeg | Format conversion & Resampling |
 
 ---
 
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- **Node.js**: v18.0 or higher
-- **Database**: PostgreSQL
-- **Caching**: Redis
-- **API Keys**: OpenAI API Key (for summarization)
+- **Node.js**: v18.0+
+- **FFmpeg**: Required for audio processing (baked into project via `ffmpeg-static`)
+- **Memory**: 8GB+ (Recommended for local model inference)
 
 ### Installation
 
@@ -83,25 +80,22 @@ graph TD
 
 2. **Setup Environments**
    ```bash
-   # Root directory
+   # Add your DB URL and optional Colab URL
    cp .env.example .env
-   # Backend directory
-   cd backend && cp .env.example .env
    ```
 
-3. **Install Dependencies**
+3. **Database Migration**
    ```bash
-   # For Frontend
-   npm install
-   # For Backend
-   cd backend && npm install
+   cd backend
+   npx prisma db push
    ```
 
-4. **Launch Development**
+4. **Install & Launch**
    ```bash
-   # Run both Frontend and Backend
+   # From root
    npm run dev
    ```
+
 
 ---
 
