@@ -1,160 +1,125 @@
-# MeetBuddy AI
+# <p align="center">🎙️ MeetBuddy AI</p>
 
-The intelligent assistant for your video conferencing sessions.
+<p align="center">
+  <strong>The Intelligent Assistant for Seamless Video Conferencing</strong>
+</p>
 
-MeetBuddy AI is a comprehensive full-stack web application designed to streamline your meeting workflow. By seamlessly integrating with multiple video conferencing platforms (Google Meet, Zoom, Teams, etc.), it captures real-time transcripts, generates AI-powered summaries, and provides powerful insights to help you stay organized and productive.
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Node.js-%3E%3D18.x-brightgreen.svg" alt="Node Version">
+  <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg" alt="PRs Welcome">
+  <img src="https://img.shields.io/github/stars/G1r1dhar/MeetBuddy-AI?style=social" alt="GitHub Stars">
+</p>
 
-## Features
+---
 
-### 🤖 AI-Powered Summaries
-Automatically generates concise and accurate summaries of your meetings, saving you time and ensuring you never miss a key decision or action item.
+## 🌟 Overview
 
-### 🎙️ Live Transcription
-Get real-time, accurate transcriptions of your meetings with speaker identification and confidence scoring.
+**MeetBuddy AI** is a cutting-edge, full-stack application designed to transform your meeting productivity. By integrating with major platforms like **Google Meet, Zoom, and Microsoft Teams**, it captures high-fidelity live transcripts and uses advanced AI to distill them into actionable summaries and insights.
 
-### 📊 Meeting Management Dashboard
-A central hub to view, manage, and access all your meeting transcripts and summaries with advanced search and filtering.
+---
 
-### 🔗 Multi-Platform Integration
-Support for Google Meet, Zoom, Microsoft Teams, Webex, Discord, and Skype.
+## ✨ Key Features
 
-### 👥 Admin Panel
-Comprehensive administrative interface for user management, analytics, and system monitoring.
+### 🤖 AI-Powered Intelligence
+- **Smart Summarization**: Automatically generate executive summaries, key decisions, and action items using OpenAI's GPT models.
+- **Mind Map Generation**: Visualize meeting connections and topic flow.
 
-### 🔒 Enterprise Security
-JWT-based authentication, encrypted data storage, and comprehensive audit logging.
+### 🎙️ Advanced Transcription
+- **Whisper Integration**: High-accuracy local and cloud-based transcription using OpenAI's Whisper models.
+- **Speaker Identification**: Clearly distinguish who said what throughout the session.
+- **Confidence Scoring**: Real-time feedback on transcription accuracy.
 
-## Technology Stack
+### 📊 Professional Management
+- **Centralized Dashboard**: A "single pane of glass" for all your past and live meetings.
+- **Admin Analytics**: Comprehensive monitoring of system usage, transcription volume, and user activity.
+- **Search & Filter**: Find exactly what was said months ago in seconds.
 
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Tailwind CSS** for styling
-- **React Router** for navigation
-- **React Query** for API state management
-- **Socket.io Client** for real-time features
+---
 
-### Backend
-- **Node.js** with Express.js
-- **TypeScript** for type safety
-- **PostgreSQL** with Prisma ORM
-- **Redis** for caching and sessions
-- **Socket.io** for real-time communication
-- **JWT** for authentication
+## 🏗️ Architecture & Workflow
 
-### AI & Integrations
-- **OpenAI API** for meeting summaries
-- **Google Cloud Speech-to-Text** for transcription
-- **OAuth 2.0** for platform integrations
+```mermaid
+graph TD
+    A[Meeting Platform] -->|Audio Stream| B{MeetBuddy Node}
+    B -->|Local Buffer| C[Whisper Service]
+    C -->|Text Segments| D[Live Transcript UI]
+    C -->|Complete Text| E[OpenAI Summarizer]
+    E -->|JSON Data| F[Database]
+    F -->|Persistence| G[User Dashboard]
+    
+    style B fill:#f9f,stroke:#333,stroke-width:4px
+    style E fill:#00ff00,stroke:#333
+```
 
-## Getting Started
+---
+
+## 🚀 Tech Stack
+
+| Frontend | Backend | AI & Infrastructure |
+| :--- | :--- | :--- |
+| **React 18** (TS) | **Node.js** (Express) | **OpenAI API** |
+| **Vite** | **TypeScript** | **Whisper (Local/Colab)** |
+| **Tailwind CSS** | **PostgreSQL** (Prisma) | **Socket.io** |
+| **React Query** | **Redis** | **Docker** |
+
+---
+
+## 🛠️ Getting Started
 
 ### Prerequisites
-- Node.js (v18.x or higher)
-- PostgreSQL (v14 or higher)
-- Redis (v6 or higher)
-- npm or yarn
+- **Node.js**: v18.0 or higher
+- **Database**: PostgreSQL
+- **Caching**: Redis
+- **API Keys**: OpenAI API Key (for summarization)
 
 ### Installation
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/G1r1dhar/MEETBUDDY-AI-FYP-2026.git
-cd MEETBUDDY-AI-FYP-2026
-```
+1. **Clone & Explore**
+   ```bash
+   git clone https://github.com/G1r1dhar/MeetBuddy-AI.git
+   cd MeetBuddy-AI
+   ```
 
-2. **Install dependencies**
-```bash
-npm install
-```
+2. **Setup Environments**
+   ```bash
+   # Root directory
+   cp .env.example .env
+   # Backend directory
+   cd backend && cp .env.example .env
+   ```
 
-3. **Set up environment variables**
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
+3. **Install Dependencies**
+   ```bash
+   # For Frontend
+   npm install
+   # For Backend
+   cd backend && npm install
+   ```
 
-4. **Set up the database**
-```bash
-# Install and start PostgreSQL
-# Install and start Redis
-# Update DATABASE_URL in .env
-```
+4. **Launch Development**
+   ```bash
+   # Run both Frontend and Backend
+   npm run dev
+   ```
 
-5. **Run the development server**
-```bash
-# Frontend (Vite dev server)
-npm run dev
+---
 
-# Backend (when implemented)
-npm run dev:server
-```
+## 🔒 Security & Contribution
 
-### Environment Configuration
+- **Enterprise Security**: JWT-based auth, encrypted storage, and robust environment management.
+- **Contribution**: We love PRs! Please check out [CONTRIBUTING.md](./CONTRIBUTING.md) and our [SECURITY.md](./SECURITY.md) guidelines.
 
-Copy `.env.example` to `.env` and configure the following:
+---
 
-- **Database**: PostgreSQL connection string
-- **Redis**: Redis connection URL
-- **JWT**: Secret key for token signing
-- **OpenAI**: API key for AI summaries
-- **Google Cloud**: API keys for speech recognition
-- **OAuth**: Client IDs and secrets for platform integrations
+## 👨‍💻 Author
 
-## Development Scripts
+**Bhaikar Giridhar**  
+📧 [giridhar2k20@gmail.com](mailto:giridhar2k20@gmail.com)  
+🔗 [GitHub Profile](https://github.com/G1r1dhar)
 
-```bash
-npm run dev          # Start Vite dev server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
-npm run test         # Run tests with Vitest
-npm run test:ui      # Run tests with UI
-```
+---
 
-## Project Structure
-
-```
-meetbuddyai/
-├── src/
-│   ├── components/     # Reusable UI components
-│   ├── contexts/       # React contexts
-│   ├── pages/          # Page components
-│   ├── services/       # API and external services
-│   ├── hooks/          # Custom React hooks
-│   ├── lib/            # Utility functions
-│   ├── test/           # Test utilities and setup
-│   └── types/          # TypeScript type definitions
-├── backend/            # Backend API server (to be implemented)
-├── public/             # Static assets
-├── .env.example        # Environment variables template
-└── vite.config.ts      # Vite configuration
-```
-
-## Testing
-
-The project uses Vitest for testing with property-based testing using fast-check:
-
-```bash
-npm run test           # Run all tests
-npm run test:ui        # Run tests with UI
-npm run test:coverage  # Run tests with coverage
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-**Author:** Bhaikar Giridhar  
-**Email:** giridhar2k20@gmail.com  
-**GitHub:** [G1r1dhar](https://github.com/G1r1dhar)
+<p align="center">
+  MADE WITH ❤️ BY THE MEETBUDDY AI TEAM
+</p>
