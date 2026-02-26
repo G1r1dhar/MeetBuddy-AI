@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER")
+  avatarUrl String?  @map("avatar_url")
+  
+  // Subscription and usage
+  subscription    String @default("FREE")
+  storageUsed     Int    @default(0) @map("storage_used")
+  
+  // Security features
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  accountLockedUntil  DateTime? @map("account_locked_until")
+  mfaEnabled          Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret           String?   @map("mfa_secret")
+  mfaBackupCodes      String    @default("[]") @map("mfa_backup_codes")
+  
+  // Preferences
+  preferences     String       @default("{}")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+  
+  // Relations
+  meetings            Meeting[]
+  platformIntegrations PlatformIntegration[]
+  files               File[]
+  sessions            UserSession[]
+  
+  @@map("users")
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  userId      String   @map("user_id")
+  
+  // Meeting details
+  platform     String
+  meetingUrl   String?  @map("meeting_url")
+  scheduledTime DateTime @map("scheduled_time")
+  startTime    DateTime? @map("start_time")
+  endTime      DateTime? @map("end_time")
+  status       String @default("SCHEDULED")
+  
+  // File storage
+  recordingUrl String? @map("recording_url")
+  storageSize  Int     @default(0) @map("storage_size")
+  
+  // Participants (stored as JSON string)
+  participants String  @default("[]")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcripts TranscriptEntry[]
+  summaries   Summary[]
+  
+  @@map("meetings")
+}
+
+model TranscriptEntry {
+  id        String   @id @default(cuid())
+  meetingId String   @map("meeting_id")
+  
+  // Transcript content
+  speaker    String
+  text       String
+  timestamp  DateTime
+  confidence Float
+  isFinal    Boolean  @default(false) @map("is_final")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  
+  @@map("transcript_entries")
+}
+
+model Summary {
+  id        String   @id @default(cuid())
+  meetingId String   @map("meeting_id")
+  
+  // Summary content
+  overallSummary String @map("overall_summary")
+  keyPoints      String @default("[]") @map("key_points")
+  actionItems    String @default("[]") @map("action_items")
+  nextSteps      String @default("[]") @map("next_steps")
+  topics         String @default("[]")
+  
+  // Timestamps
+  generatedAt DateTime @default(now()) @map("generated_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  
+  @@map("summaries")
+}
+
+model PlatformIntegration {
+  id       String   @id @default(cuid())
+  userId   String   @map("user_id")
+  
+  // Platform details
+  platform     String
+  accessToken  String   @map("access_token")
+  refreshToken String?  @map("refresh_token")
+  expiresAt    DateTime? @map("expires_at")
+  status       String @default("CONNECTED")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, platform])
+  @@map("platform_integrations")
+}
+
+model SystemLog {
+  id      String   @id @default(cuid())
+  level   String
+  message String
+  meta    String   @default("{}")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("system_logs")
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String @default("STRING")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@map("system_settings")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  sessionId String   @unique @map("session_id")
+  
+  // Session details
+  ipAddress   String   @map("ip_address")
+  userAgent   String   @map("user_agent")
+  isActive    Boolean  @default(true) @map("is_active")
+  lastActivity DateTime @default(now()) @map("last_activity")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+}
+
+model File {
+  id           String   @id @default(cuid())
+  originalName String   @map("original_name")
+  fileName     String   @map("file_name")
+  filePath     String   @map("file_path")
+  publicUrl    String   @map("public_url")
+  mimeType     String   @map("mime_type")
+  size         Int
+  category     String
+  userId       String   @map("user_id")
+  
+  // Metadata (thumbnails, processing info, etc.)
+  metadata     String   @default("{}")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("files")
+}
