@@ -17,9 +17,9 @@
 
 ## ✨ Key Features
 
-### 🤖 Local AI Intelligence
-- **Offline Summarization**: Generate meeting summaries, key points, and action items locally using **DistilBART-CNN** without external API costs.
-- **Smart Insights**: Automatically identifies topics and next steps based on meeting context.
+### 🤖 Advanced AI Intelligence
+- **GPU-Accelerated LLM**: Generate meeting summaries, key points, action items, and mind maps using **Ollama** running on free Colab GPU instances.
+- **Smart Insights**: Automatically identifies topics, hierarchical mind maps, and next steps based on meeting context.
 
 ### 🎙️ Advanced Transcription
 - **Hybrid Engine**: Seamlessly switches between high-accuracy **Whisper Large (Colab/GPU)** and efficient **Whisper Base (Local)**.
@@ -37,8 +37,8 @@ graph TD
     C -->|Primary Path| D[Colab GPU: Whisper Large]
     C -->|Local Fallback| E[Transformers.js: Whisper Base]
     D & E -->|Text Segments| F[Socket.io: Live UI]
-    F -->|Final Text| G[DistilBART: Local Summary]
-    G -->|JSON State| H[(SQLite / Prisma)]
+    F -->|Final Text| G[Colab GPU: Ollama LLM]
+    G -->|Summary & Mind Map| H[(SQLite / Prisma)]
     H -->|Persistence| I[User Dashboard]
     
     style B fill:#3b82f6,color:#fff
@@ -57,8 +57,8 @@ graph TD
 | **Real-Time** | Socket.io | Bi-directional Live Streaming |
 | **Database** | SQLite / Prisma | Lightweight & Reliable Storage |
 | **Transcription** | Transformers.js | **Whisper-Base.en** (Local) |
-| **GPU Backend** | FastAPI / Colab | **Whisper-Large-v3** (Cloud) |
-| **Summarization** | DistilBART | **distilbart-cnn-6-6** (Local) |
+| **GPU Backend** | FastAPI / Colab | **Whisper-Large-v3** & **Ollama** |
+| **Summarization & Mind Maps** | Ollama | **Llama / Mistral** (Cloud) |
 | **Audio Ops** | FFmpeg | Format conversion & Resampling |
 
 ---
