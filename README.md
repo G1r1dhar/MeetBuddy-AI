@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <video src="https://github.com/G1r1dhar/MeetBuddy-AI/raw/main/meetbuddyai_12_03_26.mp4" controls width="100%"></video>
+  <img src="https://github.com/G1r1dhar/MeetBuddy-AI/raw/main/meetbuddyai_12_03_26.mp4" alt="MeetBuddy AI Demo Video" width="100%">
 </p>
 
 ---
