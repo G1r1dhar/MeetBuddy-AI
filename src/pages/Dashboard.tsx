@@ -1,5 +1,3 @@
-
-
 import { useState, useMemo, useEffect } from "react"
 import { Plus, Calendar, Search, Filter, Loader, ArrowUp, ArrowDown } from "lucide-react"
 import { useMeeting } from "../contexts/MeetingContext"
@@ -83,28 +81,28 @@ export default function Dashboard() {
   }
 
   return (
-    <div className={`min-h-screen pt-16 relative overflow-hidden ${user?.darkMode ? "bg-slate-950" : "bg-slate-50"}`}>
+    <div className="min-h-screen pt-16 relative overflow-hidden transition-colors duration-300">
       {/* Background Ambient Effects */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent blur-[100px] pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-br from-theme-accent/5 to-transparent blur-[100px] pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="mb-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/5 backdrop-blur-3xl border border-white/10 p-8 rounded-3xl shadow-2xl overflow-hidden relative">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-theme-bg/60 backdrop-blur-3xl border border-theme-card-border p-8 rounded-3xl shadow-2xl overflow-hidden relative">
             {/* Header Card Glow */}
-            <div className={`absolute -right-20 -top-20 w-64 h-64 rounded-full blur-[80px] ${user?.darkMode ? "bg-indigo-500/20" : "bg-indigo-400/20"}`} />
+            <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full blur-[80px] bg-theme-accent/20" />
 
             <div className="relative z-10">
-              <h1 className={`text-4xl font-extrabold tracking-tight mb-2 ${user?.darkMode ? "text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" : "text-slate-900"}`}>
+              <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-theme-text">
                 Welcome back, {user?.name}
               </h1>
-              <p className={`text-lg font-medium ${user?.darkMode ? "text-indigo-200/60" : "text-slate-600"}`}>
+              <p className="text-lg font-medium text-theme-text opacity-70">
                 Capture and analyze your remote sessions with AI-powered insights
               </p>
             </div>
             <div className="relative z-10 flex items-center space-x-3">
               <button
                 onClick={() => setShowScheduleModal(true)}
-                className="group relative flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all duration-300 transform hover:-translate-y-0.5"
+                className="group relative flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold text-black bg-theme-accent hover:brightness-110 shadow-[0_4px_14px_0_rgba(255,193,7,0.39)] hover:shadow-[0_6px_20px_rgba(255,193,7,0.23)] transition-all duration-300 transform hover:-translate-y-0.5"
               >
                 <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <Plus className="w-5 h-5 relative z-10" />
@@ -114,27 +112,20 @@ export default function Dashboard() {
           </div>
         </div>
 
-
-
         {/* Search and Filter Controls */}
         {meetings.length > 0 && (
-          <div className={`rounded-xl border p-6 mb-8 ${user?.darkMode ? "bg-gray-900 border-yellow-500/20" : "bg-white border-gray-200"
-            }`}>
+          <div className="rounded-xl border p-6 mb-8 bg-theme-card border-theme-card-border">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               {/* Search */}
               <div className="flex-1 max-w-md">
                 <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${user?.darkMode ? "text-gray-400" : "text-gray-400"
-                    }`} />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-icon" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search meetings..."
-                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${user?.darkMode
-                      ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                      }`}
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-theme-accent focus:border-transparent bg-theme-bg border-theme-card-border text-theme-text placeholder-theme-text/50"
                   />
                 </div>
               </div>
@@ -143,14 +134,11 @@ export default function Dashboard() {
               <div className="flex items-center space-x-4">
                 {/* Status Filter */}
                 <div className="flex items-center space-x-2">
-                  <Filter className={`w-4 h-4 ${user?.darkMode ? "text-gray-400" : "text-gray-500"}`} />
+                  <Filter className="w-4 h-4 text-theme-icon" />
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                    className={`border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${user?.darkMode
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                    className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent focus:border-transparent bg-theme-bg border-theme-card-border text-theme-text"
                   >
                     <option value="all">All Status</option>
                     <option value="SCHEDULED">Scheduled</option>
@@ -164,12 +152,8 @@ export default function Dashboard() {
                   <button
                     onClick={() => toggleSort("date")}
                     className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === "date"
-                      ? user?.darkMode
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-indigo-100 text-indigo-700"
-                      : user?.darkMode
-                        ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      ? "bg-theme-accent/20 text-theme-accent"
+                      : "text-theme-icon hover:text-theme-text hover:bg-theme-bg"
                       }`}
                   >
                     <span>Date</span>
@@ -181,12 +165,8 @@ export default function Dashboard() {
                   <button
                     onClick={() => toggleSort("title")}
                     className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === "title"
-                      ? user?.darkMode
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-indigo-100 text-indigo-700"
-                      : user?.darkMode
-                        ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      ? "bg-theme-accent/20 text-theme-accent"
+                      : "text-theme-icon hover:text-theme-text hover:bg-theme-bg"
                       }`}
                   >
                     <span>Title</span>
@@ -198,12 +178,8 @@ export default function Dashboard() {
                   <button
                     onClick={() => toggleSort("status")}
                     className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === "status"
-                      ? user?.darkMode
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-indigo-100 text-indigo-700"
-                      : user?.darkMode
-                        ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      ? "bg-theme-accent/20 text-theme-accent"
+                      : "text-theme-icon hover:text-theme-text hover:bg-theme-bg"
                       }`}
                   >
                     <span>Status</span>
@@ -216,9 +192,8 @@ export default function Dashboard() {
             </div>
 
             {/* Results Summary */}
-            <div className={`mt-4 pt-4 border-t ${user?.darkMode ? "border-gray-700" : "border-gray-200"
-              }`}>
-              <p className={`text-sm ${user?.darkMode ? "text-gray-400" : "text-gray-600"}`}>
+            <div className="mt-4 pt-4 border-t border-theme-card-border">
+              <p className="text-sm text-theme-text opacity-70">
                 Showing {filteredAndSortedMeetings.length} of {meetings.length} meetings
                 {searchTerm && ` matching "${searchTerm}"`}
                 {statusFilter !== "all" && ` with status "${statusFilter}"`}
@@ -229,11 +204,9 @@ export default function Dashboard() {
 
         {/* Loading State */}
         {loading && (
-          <div className={`rounded-xl border p-12 text-center ${user?.darkMode ? "bg-gray-900 border-yellow-500/20" : "bg-white border-gray-200"
-            }`}>
-            <Loader className={`w-8 h-8 mx-auto mb-4 animate-spin ${user?.darkMode ? "text-yellow-400" : "text-indigo-600"
-              }`} />
-            <p className={`${user?.darkMode ? "text-gray-400" : "text-gray-600"}`}>
+          <div className="rounded-xl border p-12 text-center bg-theme-card border-theme-card-border">
+            <Loader className="w-8 h-8 mx-auto mb-4 animate-spin text-theme-accent" />
+            <p className="text-theme-text opacity-70">
               Loading meetings...
             </p>
           </div>
@@ -241,24 +214,19 @@ export default function Dashboard() {
 
         {/* Error State */}
         {error && !loading && (
-          <div className={`rounded-xl border p-12 text-center ${user?.darkMode ? "bg-gray-900 border-red-500/20" : "bg-white border-red-200"
-            }`}>
-            <div className={`p-4 rounded-full inline-block mb-4 ${user?.darkMode ? "bg-red-500/20" : "bg-red-100"
-              }`}>
-              <Calendar className={`w-12 h-12 ${user?.darkMode ? "text-red-400" : "text-red-600"}`} />
+          <div className="rounded-xl border p-12 text-center bg-red-500/5 border-red-500/20">
+            <div className="p-4 rounded-full inline-block mb-4 bg-red-500/20">
+              <Calendar className="w-12 h-12 text-red-500 dark:text-red-400" />
             </div>
-            <h3 className={`text-xl font-semibold mb-2 ${user?.darkMode ? "text-red-400" : "text-red-900"}`}>
+            <h3 className="text-xl font-semibold mb-2 text-red-500 dark:text-red-400">
               Failed to load meetings
             </h3>
-            <p className={`mb-6 max-w-md mx-auto ${user?.darkMode ? "text-gray-400" : "text-gray-600"}`}>
+            <p className="mb-6 max-w-md mx-auto text-theme-text opacity-70">
               {error}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${user?.darkMode
-                ? "bg-red-500 text-white hover:bg-red-400"
-                : "bg-red-600 text-white hover:bg-red-700"
-                }`}
+              className="px-4 py-2 rounded-lg font-medium transition-colors bg-red-500 hover:bg-red-600 text-white"
             >
               Retry
             </button>
@@ -267,28 +235,20 @@ export default function Dashboard() {
 
         {/* Empty State or Meetings */}
         {!loading && !error && meetings.length === 0 ? (
-          <div
-            className={`rounded-xl border p-12 text-center ${user?.darkMode ? "bg-gray-900 border-yellow-500/20" : "bg-white border-gray-200"
-              }`}
-          >
-            <div
-              className={`p-4 rounded-full inline-block mb-4 ${user?.darkMode ? "bg-yellow-500/20" : "bg-indigo-100"}`}
-            >
-              <Calendar className={`w-12 h-12 ${user?.darkMode ? "text-yellow-400" : "text-indigo-600"}`} />
+          <div className="rounded-xl border p-12 text-center bg-theme-card border-theme-card-border">
+            <div className="p-4 rounded-full inline-block mb-4 bg-theme-accent/20">
+              <Calendar className="w-12 h-12 text-theme-accent" />
             </div>
-            <h3 className={`text-xl font-semibold mb-2 ${user?.darkMode ? "text-yellow-400" : "text-gray-900"}`}>
+            <h3 className="text-xl font-semibold mb-2 text-theme-text">
               Welcome to MeetBuddy AI
             </h3>
-            <p className={`mb-6 max-w-md mx-auto ${user?.darkMode ? "text-gray-400" : "text-gray-600"}`}>
+            <p className="mb-6 max-w-md mx-auto text-theme-text opacity-70">
               Start by scheduling your first Google Meet session. We'll capture real-time transcripts and generate
               AI-powered summaries and insights.
             </p>
             <button
               onClick={() => setShowScheduleModal(true)}
-              className={`inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${user?.darkMode
-                ? "bg-yellow-500 text-black hover:bg-yellow-400"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-                }`}
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors bg-theme-accent text-black hover:brightness-110"
             >
               <Plus className="w-5 h-5" />
               <span>Schedule Your First Meeting</span>
@@ -296,16 +256,14 @@ export default function Dashboard() {
           </div>
         ) : !loading && !error && filteredAndSortedMeetings.length === 0 && meetings.length > 0 ? (
           /* No Results State */
-          <div className={`rounded-xl border p-12 text-center ${user?.darkMode ? "bg-gray-900 border-yellow-500/20" : "bg-white border-gray-200"
-            }`}>
-            <div className={`p-4 rounded-full inline-block mb-4 ${user?.darkMode ? "bg-yellow-500/20" : "bg-gray-100"
-              }`}>
-              <Search className={`w-12 h-12 ${user?.darkMode ? "text-yellow-400" : "text-gray-400"}`} />
+          <div className="rounded-xl border p-12 text-center bg-theme-card border-theme-card-border">
+            <div className="p-4 rounded-full inline-block mb-4 bg-theme-accent/20">
+              <Search className="w-12 h-12 text-theme-accent" />
             </div>
-            <h3 className={`text-xl font-semibold mb-2 ${user?.darkMode ? "text-white" : "text-gray-900"}`}>
+            <h3 className="text-xl font-semibold mb-2 text-theme-text">
               No meetings found
             </h3>
-            <p className={`mb-6 max-w-md mx-auto ${user?.darkMode ? "text-gray-400" : "text-gray-600"}`}>
+            <p className="mb-6 max-w-md mx-auto text-theme-text opacity-70">
               No meetings match your current search and filter criteria. Try adjusting your filters or search terms.
             </p>
             <div className="flex justify-center space-x-3">
@@ -314,19 +272,13 @@ export default function Dashboard() {
                   setSearchTerm("")
                   setStatusFilter("all")
                 }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${user?.darkMode
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                className="px-4 py-2 rounded-lg font-medium transition-colors bg-theme-bg text-theme-text hover:brightness-95 border border-theme-card-border"
               >
                 Clear Filters
               </button>
               <button
                 onClick={() => setShowScheduleModal(true)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${user?.darkMode
-                  ? "bg-yellow-500 text-black hover:bg-yellow-400"
-                  : "bg-indigo-600 text-white hover:bg-indigo-700"
-                  }`}
+                className="px-4 py-2 rounded-lg font-medium transition-colors bg-theme-accent text-black hover:brightness-110"
               >
                 Schedule New Meeting
               </button>
@@ -337,7 +289,7 @@ export default function Dashboard() {
             {/* Upcoming Meetings */}
             {scheduledMeetings.length > 0 && (
               <div className="mb-8">
-                <h2 className={`text-xl font-semibold mb-4 ${user?.darkMode ? "text-white" : "text-gray-900"}`}>
+                <h2 className="text-xl font-semibold mb-4 text-theme-text">
                   Upcoming Meetings ({scheduledMeetings.length})
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -351,7 +303,7 @@ export default function Dashboard() {
             {/* Active Recordings */}
             {recordingMeetings.length > 0 && (
               <div className="mb-8">
-                <h2 className={`text-xl font-semibold mb-4 ${user?.darkMode ? "text-white" : "text-gray-900"}`}>
+                <h2 className="text-xl font-semibold mb-4 text-theme-text">
                   Active Recordings ({recordingMeetings.length})
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -365,7 +317,7 @@ export default function Dashboard() {
             {/* Recent Recordings */}
             {completedMeetings.length > 0 && (
               <div>
-                <h2 className={`text-xl font-semibold mb-4 ${user?.darkMode ? "text-white" : "text-gray-900"}`}>
+                <h2 className="text-xl font-semibold mb-4 text-theme-text">
                   Completed Meetings ({completedMeetings.length})
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -384,10 +336,7 @@ export default function Dashboard() {
                     setSearchTerm("")
                     setStatusFilter("all")
                   }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${user?.darkMode
-                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors bg-theme-bg text-theme-text hover:brightness-95 border border-theme-card-border"
                 >
                   Show All Meetings
                 </button>

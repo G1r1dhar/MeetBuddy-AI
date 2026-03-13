@@ -95,6 +95,23 @@ class MeetingService {
               timestamp: new Date(entry.timestamp),
             })) || [],
             createdBy: meeting.userId, // Map userId to createdBy for compatibility
+            // Restore summary from nested summaries[0] returned by the list endpoint
+            summary: meeting.summaries?.[0]?.overallSummary || meeting.summary || undefined,
+            topics: (() => {
+              const t = meeting.summaries?.[0]?.topics;
+              if (!t) return meeting.topics || [];
+              try { return typeof t === 'string' ? JSON.parse(t) : t; } catch { return meeting.topics || []; }
+            })(),
+            notes: (() => {
+              const s = meeting.summaries?.[0];
+              if (!s) return meeting.notes || undefined;
+              try {
+                const kp: string[] = typeof s.keyPoints === 'string' ? JSON.parse(s.keyPoints || '[]') : (s.keyPoints || []);
+                const ai: string[] = typeof s.actionItems === 'string' ? JSON.parse(s.actionItems || '[]') : (s.actionItems || []);
+                const ns: string[] = typeof s.nextSteps === 'string' ? JSON.parse(s.nextSteps || '[]') : (s.nextSteps || []);
+                return [...kp, ...ai, ...ns].join('\n') || meeting.notes || undefined;
+              } catch { return meeting.notes || undefined; }
+            })(),
           };
         });
         console.log('✅ Transformed meetings:', transformedMeetings);
@@ -125,6 +142,23 @@ class MeetingService {
             ...entry,
             timestamp: new Date(entry.timestamp),
           })) || [],
+          // Restore summary fields from nested summaries[] returned by the single-meeting endpoint
+          summary: meeting.summaries?.[0]?.overallSummary || meeting.summary || undefined,
+          topics: (() => {
+            const t = meeting.summaries?.[0]?.topics;
+            if (!t) return meeting.topics || [];
+            try { return typeof t === 'string' ? JSON.parse(t) : t; } catch { return meeting.topics || []; }
+          })(),
+          notes: (() => {
+            const s = meeting.summaries?.[0];
+            if (!s) return meeting.notes || undefined;
+            try {
+              const kp: string[] = typeof s.keyPoints === 'string' ? JSON.parse(s.keyPoints || '[]') : (s.keyPoints || []);
+              const ai: string[] = typeof s.actionItems === 'string' ? JSON.parse(s.actionItems || '[]') : (s.actionItems || []);
+              const ns: string[] = typeof s.nextSteps === 'string' ? JSON.parse(s.nextSteps || '[]') : (s.nextSteps || []);
+              return [...kp, ...ai, ...ns].join('\n') || meeting.notes || undefined;
+            } catch { return meeting.notes || undefined; }
+          })(),
         };
       }
 
@@ -236,6 +270,23 @@ class MeetingService {
             ...entry,
             timestamp: new Date(entry.timestamp),
           })) || [],
+          // Restore summary fields from nested summaries[] returned by endMeeting
+          summary: meeting.summaries?.[0]?.overallSummary || meeting.summary || undefined,
+          topics: (() => {
+            const t = meeting.summaries?.[0]?.topics;
+            if (!t) return meeting.topics || [];
+            try { return typeof t === 'string' ? JSON.parse(t) : t; } catch { return meeting.topics || []; }
+          })(),
+          notes: (() => {
+            const s = meeting.summaries?.[0];
+            if (!s) return meeting.notes || undefined;
+            try {
+              const kp: string[] = typeof s.keyPoints === 'string' ? JSON.parse(s.keyPoints || '[]') : (s.keyPoints || []);
+              const ai: string[] = typeof s.actionItems === 'string' ? JSON.parse(s.actionItems || '[]') : (s.actionItems || []);
+              const ns: string[] = typeof s.nextSteps === 'string' ? JSON.parse(s.nextSteps || '[]') : (s.nextSteps || []);
+              return [...kp, ...ai, ...ns].join('\n') || meeting.notes || undefined;
+            } catch { return meeting.notes || undefined; }
+          })(),
         };
       }
 
@@ -290,34 +341,37 @@ class MeetingService {
     }
   }
 
-  async generateMindMap(meetingId: string): Promise<MindMapNode> {
+    async generateMindMap(meetingId: string): Promise<MindMapNode> {
     try {
-      // MindMap endpoint does not exist on Backend, so we generate a mock from the summary data
-      const summaryRes = await this.generateSummary(meetingId);
+      // Use apiClient.post so the baseURL and auth token are resolved correctly
+      const response = await apiClient.post<any>(`/meetings/${meetingId}/mindmap`);
 
-      const radius = 220;
-      const cx = 400;
-      const cy = 300;
-      const topics = summaryRes.topics || [];
+      // apiClient unwraps { message, data } from the backend response,
+      // so response.data is the raw MindMapNode from the server.
+      const rawNode = response.data;
 
-      const mindMap: MindMapNode = {
-        id: 'root',
-        text: 'Core Topics',
-        x: cx,
-        y: cy,
-        children: topics.map((t, i) => {
-          const angle = (i / Math.max(topics.length, 1)) * 2 * Math.PI - Math.PI / 2; // Start from top
-          return {
-            id: `topic-${i}`,
-            text: t,
-            x: cx + radius * Math.cos(angle),
-            y: cy + radius * Math.sin(angle),
-            children: []
-          };
-        })
+      if (!rawNode || typeof rawNode !== 'object') {
+        throw new Error('Invalid mind map response from server');
+      }
+
+      const mapNode = (node: any, cx: number, cy: number, radius: number, angleOffset: number = 0): MindMapNode => {
+        const children = Array.isArray(node.children) ? node.children : [];
+        return {
+          id: node.id || Math.random().toString(36).substring(7),
+          text: node.label || node.text || 'Topic',
+          x: cx,
+          y: cy,
+          children: children.map((child: any, i: number) => {
+            const angle = angleOffset + (i / Math.max(children.length, 1)) * 2 * Math.PI - Math.PI / 2;
+            const newRadius = radius * 0.7;
+            const childX = cx + radius * Math.cos(angle);
+            const childY = cy + radius * Math.sin(angle);
+            return mapNode(child, childX, childY, newRadius, angle);
+          })
+        };
       };
 
-      return mindMap;
+      return mapNode(rawNode, 400, 300, 220);
     } catch (error: any) {
       console.error('Generate mind map error:', error);
       throw new Error(error.message || 'Failed to generate mind map');

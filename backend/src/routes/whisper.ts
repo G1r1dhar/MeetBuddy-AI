@@ -24,7 +24,7 @@ const router = Router();
 const upload = multer({
   dest: process.env.UPLOAD_DIR || 'uploads/temp',
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB limit (Whisper API limit)
+    fileSize: 100 * 1024 * 1024, // 100MB limit — supports long-meeting audio chunks
   },
   fileFilter: (req, file, cb) => {
     if (whisperService.isValidAudioFormat(file.originalname)) {

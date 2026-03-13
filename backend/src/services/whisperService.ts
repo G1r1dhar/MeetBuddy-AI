@@ -5,9 +5,7 @@ import { localAiService } from './localAiService';
 import fs from 'fs';
 import path from 'path';
 
-// We will load @xenova/transformers dynamically to avoid ERR_REQUIRE_ESM when compiled to CommonJS.
-let pipeline: any = null;
-let env: any = null;
+import { fork, ChildProcess } from 'child_process';
 import ffmpeg from 'fluent-ffmpeg';
 // @ts-ignore
 import ffmpegStatic from 'ffmpeg-static';
@@ -21,7 +19,9 @@ if (ffmpegStatic) {
  * Service for handling real-time transcription using OpenAI Whisper
  */
 export class WhisperService {
-  private transcriber: any = null;
+  private workerProcess: ChildProcess | null = null;
+  private workerCallbacks = new Map<string, { resolve: Function, reject: Function }>();
+  private messageIdCounter = 0;
   private isInitializing = false;
 
   constructor() {
@@ -33,21 +33,48 @@ export class WhisperService {
   }
 
   private async initLocalModel() {
-    if (this.transcriber || this.isInitializing) return;
+    if (this.workerProcess || this.isInitializing) return;
     try {
       this.isInitializing = true;
-      if (!pipeline || !env) {
-        // Use Function to prevent TypeScript from transpiling import() to require()
-        const transformers = await Function('return import("@xenova/transformers")')();
-        pipeline = transformers.pipeline;
-        env = transformers.env;
-      }
+      
+      const isTs = path.extname(__filename) === '.ts';
+      const workerPath = isTs
+        ? path.join(__dirname, 'whisperWorker.ts')
+        : path.join(__dirname, 'whisperWorker.js');
+        
+      this.workerProcess = fork(workerPath, [], {
+        execArgv: isTs ? ['--import', 'tsx'] : []
+      });
 
-      env.allowLocalModels = true;
-      this.transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base.en');
-      logger.info('Local Whisper model initialized successfully.');
+      this.workerProcess.on('message', (msg: any) => {
+        if (msg.type === 'ready') {
+          logger.info('Local Whisper worker initialized successfully.');
+        } else if (msg.type === 'result' || msg.type === 'error') {
+          const callback = this.workerCallbacks.get(msg.id);
+          if (callback) {
+            if (msg.type === 'error') callback.reject(new Error(msg.error));
+            else callback.resolve(msg.result);
+            this.workerCallbacks.delete(msg.id);
+          }
+        }
+      });
+
+      this.workerProcess.on('error', (err) => {
+        logger.error('Whisper worker error', { error: err.message });
+      });
+
+      this.workerProcess.on('exit', (code) => {
+        logger.warn('Whisper worker exited', { code });
+        this.workerProcess = null;
+        for (const [id, callback] of this.workerCallbacks.entries()) {
+          callback.reject(new Error('Worker exited unexpectedly'));
+        }
+        this.workerCallbacks.clear();
+      });
+
+      this.workerProcess.send({ type: 'init' });
     } catch (error) {
-      logger.error('Failed to initialize local Whisper model', { error });
+      logger.error('Failed to initialize local Whisper worker', { error });
     } finally {
       this.isInitializing = false;
     }
@@ -68,49 +95,116 @@ export class WhisperService {
   private cleanTranscriptText(text: string): string {
     if (!text) return '';
 
-    // Remove tags like [BLANK_AUDIO], (music), *clears throat*
+    // Remove noise tags like [BLANK_AUDIO], (music), *clears throat*
     let cleaned = text.replace(/\[.*?\]/gi, '').replace(/\(.*?\)/gi, '').replace(/\*.*?\*/gi, '');
 
     let trimmed = cleaned.trim();
+    if (!trimmed) return '';
+
     const lowerTrimmed = trimmed.toLowerCase();
-
-    // Drop common whisper hallucinations if they are the entire text (ignoring punctuation)
-    const exactHallucinations = [
-      'thank you', 'thanks for watching', 'thank you for watching', 'thanks',
-      'subscribe', 'please subscribe', 'bye', 'bye bye', 'you', 'silence',
-      'blankaudio', 'amaraorg', 'youre welcome', 'vanilla extract', 'cake',
-      '1 egg', 'lets get started', 'let us get started'
-    ];
-
     const punctuationLess = lowerTrimmed.replace(/[^a-z0-9\s]/g, '').trim();
-    if (exactHallucinations.includes(punctuationLess)) {
-      return '';
+
+    // ── Exact-match hallucinations (whole transcript matches one of these) ─────
+    const exactHallucinations = [
+      'thank you', 'thanks for watching', 'thank you for watching',
+      'thank you for watching this video', 'thanks', 'subscribe',
+      'please subscribe', 'bye', 'bye bye', 'you', 'silence',
+      'blankaudio', 'amaraorg', 'youre welcome', 'vanilla extract', 'cake',
+      '1 egg', 'lets get started', 'let us get started', 'like and subscribe',
+      'see you next time', 'see you in the next video', 'have a nice day',
+      'have a good day', 'good luck', 'stay tuned', 'dont forget to like',
+      'dont forget to subscribe', 'smash the like button', 'hit the bell icon',
+      'click the bell icon', 'click subscribe', 'click like', 'peace out',
+      'thats all for today', 'thats it for today', 'i hope you enjoyed',
+      'i hope you liked', 'hope you enjoyed', 'hope you liked',
+    ];
+    if (exactHallucinations.includes(punctuationLess)) return '';
+
+    // ── Substring hallucinations (transcript contains any of these phrases) ─────
+    const substringHallucinations = [
+      'subscribe to my channel',
+      'subscribe to the channel',
+      'please subscribe',
+      'like this video',
+      'like and subscribe',
+      'if you like this video',
+      'if you enjoyed this video',
+      'thank you for watching',
+      'thanks for watching',
+      'thank you for your support',
+      'see you in the next video',
+      'see you next time',
+      'dont forget to like',
+      'dont forget to subscribe',
+      'hit the bell',
+      'press the bell',
+      'click the bell',
+      'bell notification',
+      'turn on notifications',
+      'subtitles by',
+      'captions by',
+      'amara.org',
+      'translated by',
+      'welcome to my channel',
+      'welcome to the channel',
+      'in this video i will show',
+      'in this video ill show',
+      'receive all new video',
+      'smash the like',
+      'drop a like',
+      'leave a like',
+      'new video every',
+      'upload every',
+      'share this video',
+      'delicious and delicious',
+      'fried egg',
+      'variety of ingredients',
+      'how to make it',
+      'ill show you how to',
+    ];
+    for (const phrase of substringHallucinations) {
+      if (punctuationLess.includes(phrase)) return '';
     }
 
-    // Drop if contains known subtitle credits or irritating common hallucinations
-    if (
-      punctuationLess.includes('subtitles by') ||
-      punctuationLess.includes('amara') ||
-      punctuationLess.includes('translated by') ||
-      punctuationLess.includes('welcome to my channel') ||
-      punctuationLess.includes('in this video i will show you') ||
-      punctuationLess.includes('press the bell icon') ||
-      punctuationLess.includes('receive all new video notifications')
-    ) {
-      return '';
-    }
+    // ── Repetitive hallucinations (same phrase repeating) ─────────────────────
+    if (lowerTrimmed.includes('vanilla extract') && lowerTrimmed.split('vanilla extract').length > 2) return '';
 
-    // Handle repetitive hallucinations like "1 tsp vanilla extract" repeating
-    if (lowerTrimmed.includes('vanilla extract') && lowerTrimmed.split('vanilla extract').length > 2) {
-      return '';
-    }
-
-    // Drop if no alphanumeric characters present
-    if (!/[a-zA-Z0-9]/.test(trimmed)) {
-      return '';
-    }
+    // ── Drop if no real alphanumeric content ──────────────────────────────────
+    if (!/[a-zA-Z0-9]/.test(trimmed)) return '';
 
     return trimmed;
+  }
+
+  /**
+   * RMS-based Voice Activity Detection.
+   * Reads 16-bit PCM samples from a WAV buffer and returns true only if
+   * meaningful speech energy is detected above the given threshold.
+   * This is the primary hallucination prevention — we never call Whisper on silence.
+   */
+  private checkAudioHasSpeech(wavBuffer: Buffer, rmsThreshold = 0.008): boolean {
+    try {
+      // WAV PCM data starts after the 44-byte header
+      const dataStart = 44;
+      if (wavBuffer.length <= dataStart) return false;
+
+      const samples = (wavBuffer.length - dataStart) / 2; // 16-bit = 2 bytes per sample
+      if (samples === 0) return false;
+
+      let sumSquares = 0;
+      for (let i = dataStart; i < wavBuffer.length - 1; i += 2) {
+        // Read 16-bit signed PCM sample, normalize to [-1, 1]
+        const sample = wavBuffer.readInt16LE(i) / 32768.0;
+        sumSquares += sample * sample;
+      }
+      const rms = Math.sqrt(sumSquares / samples);
+
+      logger.debug('VAD RMS check', { rms: rms.toFixed(6), threshold: rmsThreshold, hasSpeech: rms >= rmsThreshold });
+      return rms >= rmsThreshold;
+    } catch (err) {
+      // If we can't read the WAV, allow through (fail-safe)
+      logger.warn('VAD check failed, allowing through', { err });
+      return true;
+    }
   }
 
   /**
@@ -151,7 +245,15 @@ export class WhisperService {
       await this.convertAudioToWav(audioFilePath, tempWav);
       const buffer = fs.readFileSync(tempWav);
 
-      // --- NEW COLAB API INTEGRATION ---
+      // ── VAD: Skip everything if audio is silent ────────────────────────────
+      const hasSpeech = this.checkAudioHasSpeech(buffer);
+      if (!hasSpeech) {
+        if (fs.existsSync(tempWav)) fs.unlinkSync(tempWav);
+        logger.info('VAD: Silent audio detected — skipping transcription entirely.');
+        return { text: '[Silent]', duration: 0, language: options.language || 'en', model: 'VAD' };
+      }
+
+      // --- COLAB API (GPU Whisper) ---
       const colabUrl = process.env.COLAB_WHISPER_URL;
 
       if (colabUrl) {
@@ -164,6 +266,10 @@ export class WhisperService {
           formData.append('file', fileBlob, 'audio.wav');
           formData.append('language', options.language || 'en');
           formData.append('temperature', (options.temperature !== undefined ? options.temperature : 0.0).toString());
+          // Tell the Colab server to be strict: suppress hallucinations server-side too
+          formData.append('no_speech_threshold', '0.6');
+          formData.append('condition_on_previous_text', 'false');
+          formData.append('compression_ratio_threshold', '2.2');
 
           // We use global fetch since Node 18+ supports it
           const colabResponse = await fetch(`${colabUrlTrimmed}/transcribe`, {
@@ -192,7 +298,7 @@ export class WhisperService {
           });
 
           return {
-            text: cleanedText || '[No Audio]',
+            text: cleanedText || '[Silent]',
             duration: 0,
             language: options.language || 'en',
             model: 'Large'
@@ -205,71 +311,46 @@ export class WhisperService {
       }
 
       // --- FALLBACK LOCAL XENOVA MODEL ---
-      if (!this.transcriber) await this.initLocalModel();
-      if (!this.transcriber) throw new Error("Local Whisper model failed to initialize");
+      if (!this.workerProcess) await this.initLocalModel();
+      if (!this.workerProcess) throw new Error("Local Whisper worker failed to initialize");
 
-      const wav = new WaveFile(buffer);
-      wav.toBitDepth('32f');
-      wav.toSampleRate(16000);
+      logger.info('Calling local Xenova transcriber worker', { options });
 
-      let audioData: any = wav.getSamples(false, Float32Array);
-      if (Array.isArray(audioData)) {
-        if (audioData.length > 0) audioData = audioData[0];
-        else audioData = new Float32Array(0);
-      }
+      const messageId = `msg_${this.messageIdCounter++}`;
+      
+      const output = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          this.workerCallbacks.delete(messageId);
+          reject(new Error('Whisper worker transcription timed out'));
+        }, 120000); // 2 minutes timeout for slow CPUs
 
-      // Calculate RMS to detect silence and prevent hallucinations
-      let sumSquares = 0;
-      for (let i = 0; i < audioData.length; i++) {
-        sumSquares += audioData[i] * audioData[i];
-      }
-      const rms = Math.sqrt(sumSquares / audioData.length);
+        this.workerCallbacks.set(messageId, {
+          resolve: (result: any) => {
+            clearTimeout(timeout);
+            resolve(result);
+          },
+          reject: (error: any) => {
+            clearTimeout(timeout);
+            reject(error);
+          }
+        });
 
-      logger.info('Audio RMS calculated', { rms, length: audioData.length });
-
-      // If RMS is very low, it's likely just silence/noise.
-      // Skip transcription to prevent the local Whisper model from hallucinating.
-      if (rms < 0.005) {
-        logger.info('Audio is likely silence, skipping transcription to prevent hallucinations');
-        if (fs.existsSync(tempWav)) fs.unlinkSync(tempWav);
-        return {
-          text: '[Silence]',
-          duration: 0,
-          language: 'en',
-          model: 'Local'
-        };
-      }
-
-      logger.info('Calling local Xenova transcriber', {
-        audioDataLength: audioData.length,
-        options
+        this.workerProcess?.send({
+          type: 'transcribe',
+          id: messageId,
+          tempWav,
+          options
+        });
       });
 
-      // Pass options directly to transcribers
-      const transcriberOptions = {
-        language: options.language || 'en',
-        temperature: options.temperature !== undefined ? options.temperature : [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
-      };
-
-      const output = await this.transcriber(audioData, transcriberOptions);
-
-      if (fs.existsSync(tempWav)) fs.existsSync(tempWav) && fs.unlinkSync(tempWav);
-
-      const cleanedText = this.cleanTranscriptText(output.text || '');
+      if (fs.existsSync(tempWav)) fs.unlinkSync(tempWav);
 
       logger.info('Local Xenova audio transcription completed', {
         filePath: audioFilePath,
-        originalTextLength: output.text?.length,
-        cleanedTextLength: cleanedText.length,
-        rawOutput: output
+        textLength: output.text?.length
       });
 
-      return {
-        text: cleanedText || '[Silence]',
-        duration: 0,
-        language: 'en',
-        model: 'Local'
-      };
+      return output;
 
 
     } catch (error: any) {
@@ -377,7 +458,7 @@ export class WhisperService {
       const averageConfidence = segmentCount > 0 ? totalConfidence / segmentCount : 0.8;
 
       const result = {
-        text: text.trim() || '[No Audio]',
+        text: text.trim() || '[Silent]',
         confidence: Math.min(Math.max(averageConfidence, 0), 1), // Clamp between 0 and 1
         timestamp: options.timestamp || new Date(),
         speaker: options.speaker || 'Unknown',

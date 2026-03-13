@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { MeetingProvider } from "./contexts/MeetingContext"
@@ -11,6 +12,7 @@ import AdminPanel from "./pages/AdminPanel"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import SettingsPanel from "./components/SettingsPanel"
+import SplashScreen from "./components/SplashScreen"
 import { useAuth } from "./contexts/AuthContext"
 import { Toaster } from "sonner"
 
@@ -29,9 +31,9 @@ function AppContent() {
         path="/"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-black text-white">
+            <div className="min-h-screen">
               <Header />
-              <main className="pt-16">
+              <main className="pt-28 pb-8">
                 <Dashboard />
               </main>
             </div>
@@ -42,9 +44,9 @@ function AppContent() {
         path="/meeting/:id"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-black text-white">
+            <div className="min-h-screen">
               <Header />
-              <main className="pt-16">
+              <main className="pt-28 pb-8">
                 <MeetingRoom />
               </main>
             </div>
@@ -55,9 +57,9 @@ function AppContent() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-black text-white">
+            <div className="min-h-screen">
               <Header />
-              <main className="pt-16">
+              <main className="pt-28 pb-8">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                   <SettingsPanel />
                 </div>
@@ -70,9 +72,9 @@ function AppContent() {
         path="/admin"
         element={
           <ProtectedRoute requireAdmin>
-            <div className="min-h-screen bg-black text-white">
+            <div className="min-h-screen">
               <Header />
-              <main className="pt-16">
+              <main className="pt-28 pb-8">
                 <AdminPanel />
               </main>
             </div>
@@ -85,8 +87,11 @@ function AppContent() {
 }
 
 function App() {
+  const [splashDone, setSplashDone] = useState(false)
+
   return (
     <ErrorBoundary>
+      {!splashDone && <SplashScreen onComplete={() => setSplashDone(true)} />}
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <MeetingProvider>

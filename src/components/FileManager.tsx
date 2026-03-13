@@ -136,7 +136,7 @@ export default function FileManager({
     } else if (mimeType.includes('pdf') || mimeType.includes('document')) {
       return <FileText className="w-5 h-5 text-red-500" />;
     }
-    return <File className="w-5 h-5 text-gray-500" />;
+    return <File className="w-5 h-5 text-theme-icon" />;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -190,14 +190,14 @@ export default function FileManager({
   const totalPages = Math.ceil(totalFiles / limit);
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
+    <div className={`bg-theme-card rounded-lg border border-theme-card-border overflow-hidden transition-colors duration-300 ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-theme-card-border">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">File Manager</h2>
+          <h2 className="text-xl font-semibold text-theme-text">File Manager</h2>
 
           {storageStats && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-sm text-theme-text/70">
               <HardDrive className="w-4 h-4" />
               <span>
                 {formatFileSize(storageStats.totalSize)} used • {storageStats.totalFiles} files
@@ -210,13 +210,13 @@ export default function FileManager({
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-icon" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search files..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme-card-border rounded-lg text-sm text-theme-text placeholder-theme-text/40 focus:ring-2 focus:ring-theme-accent focus:border-transparent transition-colors"
             />
           </div>
 
@@ -227,7 +227,7 @@ export default function FileManager({
               setSelectedCategory(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-theme-bg border border-theme-card-border text-theme-text rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent focus:border-transparent cursor-pointer transition-colors"
           >
             <option value="all">All Categories</option>
             <option value="avatar">Avatars</option>
@@ -244,7 +244,7 @@ export default function FileManager({
               setSortBy(field as any);
               setSortOrder(order as any);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-theme-bg border border-theme-card-border text-theme-text rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent focus:border-transparent cursor-pointer transition-colors"
           >
             <option value="date-desc">Newest First</option>
             <option value="date-asc">Oldest First</option>
@@ -257,23 +257,23 @@ export default function FileManager({
       </div>
 
       {/* File List */}
-      <div className="p-6">
+      <div className="p-6 bg-theme-bg/50">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-            <span className="ml-2 text-gray-600">Loading files...</span>
+            <Loader2 className="w-8 h-8 text-theme-accent animate-spin" />
+            <span className="ml-2 text-theme-text/70">Loading files...</span>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-12 text-red-600">
+          <div className="flex items-center justify-center py-12 text-red-500">
             <AlertCircle className="w-8 h-8 mr-2" />
             <span>{error}</span>
           </div>
         ) : filteredFiles.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <File className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-12 text-theme-text/60">
+            <File className="w-12 h-12 mx-auto mb-4 text-theme-icon opacity-50" />
             <p>No files found</p>
             {searchTerm && (
-              <p className="text-sm mt-2">Try adjusting your search or filters</p>
+              <p className="text-sm mt-2 opacity-70">Try adjusting your search or filters</p>
             )}
           </div>
         ) : (
@@ -281,16 +281,16 @@ export default function FileManager({
             {filteredFiles.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-4 bg-theme-card border border-theme-card-border rounded-lg hover:brightness-95 dark:hover:brightness-110 transition-all shadow-sm"
               >
                 <div className="flex items-center space-x-4 flex-1 min-w-0">
                   {getFileIcon(file.mimeType)}
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                    <h3 className="text-sm font-medium text-theme-text truncate">
                       {file.originalName}
                     </h3>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500 mt-1">
+                    <div className="flex items-center space-x-4 text-xs text-theme-text/60 mt-1">
                       <span>{formatFileSize(file.size)}</span>
                       <span>•</span>
                       <span>{formatDate(file.createdAt)}</span>
@@ -303,7 +303,7 @@ export default function FileManager({
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => onFileSelect?.(file)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-2 text-theme-icon hover:text-theme-accent transition-colors"
                     title="View file"
                   >
                     <Eye className="w-4 h-4" />
@@ -311,7 +311,7 @@ export default function FileManager({
 
                   <button
                     onClick={() => downloadFile(file)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-2 text-theme-icon hover:text-theme-accent transition-colors"
                     title="Download file"
                   >
                     <Download className="w-4 h-4" />
@@ -319,7 +319,7 @@ export default function FileManager({
 
                   <button
                     onClick={() => deleteFile(file.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                    className="p-2 text-theme-icon hover:text-red-500 transition-colors"
                     title="Delete file"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -332,8 +332,8 @@ export default function FileManager({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-theme-card-border">
+            <div className="text-sm text-theme-text/70">
               Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalFiles)} of {totalFiles} files
             </div>
 
@@ -341,19 +341,19 @@ export default function FileManager({
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 bg-theme-bg border border-theme-card-border text-theme-text rounded text-sm hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
 
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-theme-text/80 font-medium px-2">
                 Page {page} of {totalPages}
               </span>
 
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 bg-theme-bg border border-theme-card-border text-theme-text rounded text-sm hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>

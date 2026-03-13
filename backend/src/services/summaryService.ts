@@ -63,7 +63,7 @@ export class SummaryService {
     const transcriptResult = await this.transcriptService.getTranscriptsForMeeting(
       meetingId,
       userId,
-      { isFinal: true }, // Only use final transcripts
+      {}, // Use all transcripts (whisper saves with isFinal: false by default)
       { limit: 10000, sortBy: 'timestamp', sortOrder: 'asc' }
     );
 

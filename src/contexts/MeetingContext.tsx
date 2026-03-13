@@ -6,6 +6,7 @@ import { meetingService, type Meeting, type TranscriptEntry, type MindMapNode, t
 export type { Meeting, TranscriptEntry, MindMapNode, CreateMeetingRequest }
 import { useSocket } from "../hooks/useSocket"
 import { useAuth } from "./AuthContext"
+import { toast } from "sonner"
 
 // Meeting, TranscriptEntry, and MindMapNode interfaces are now imported from meetingService
 
@@ -37,7 +38,7 @@ export function MeetingProvider({ children }: { children: React.ReactNode }) {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hasInitialized, setHasInitialized] = useState(false) // Prevent multiple initializations
+  const [initializedUserId, setInitializedUserId] = useState<string | null>(null) // Track the user ID we've loaded meetings for
 
   // Get auth state to wait for authentication
   const { user, loading: authLoading } = useAuth()
@@ -55,7 +56,7 @@ export function MeetingProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ MeetingContext: Received meetings from service:', allMeetings.length);
       console.log('📋 MeetingContext: Meeting details:', allMeetings.map(m => ({ id: m.id, title: m.title, status: m.status })));
       setMeetings(allMeetings)
-      setHasInitialized(true)
+      setInitializedUserId(user?.id || null)
       console.log('✅ MeetingContext: Meetings state updated');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load meetings'
@@ -124,14 +125,25 @@ export function MeetingProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Only load meetings if user is authenticated and auth is not loading
-    console.log('🔍 MeetingContext: Auth state changed:', { user: !!user, authLoading, hasInitialized });
-    if (user && !authLoading && !hasInitialized) {
-      console.log('✅ MeetingContext: User authenticated, loading meetings...');
+    console.log('🔍 MeetingContext: Auth state changed:', { userId: user?.id, authLoading, initializedUserId });
+    
+    // Clear state if user logs out or changes
+    if (!user && !authLoading && initializedUserId) {
+      console.log('🧹 MeetingContext: User logged out, clearing state...');
+      setMeetings([])
+      setActiveMeeting(null)
+      setInitializedUserId(null)
+      setError(null)
+      return;
+    }
+
+    if (user && !authLoading && initializedUserId !== user.id) {
+      console.log('✅ MeetingContext: User authenticated (or changed), loading meetings...');
       refreshMeetings()
     } else {
-      console.log('⏳ MeetingContext: Waiting for authentication or already initialized...');
+      console.log('⏳ MeetingContext: Waiting for authentication or already initialized for this user...');
     }
-  }, [user, authLoading, hasInitialized, refreshMeetings]) // Add hasInitialized to prevent multiple loads
+  }, [user, authLoading, initializedUserId, refreshMeetings]) // Add initializedUserId to prevent multiple loads
 
   // Set up real-time event listeners
   useEffect(() => {
@@ -202,6 +214,12 @@ export function MeetingProvider({ children }: { children: React.ReactNode }) {
           notes: notes || prev.notes
         } : null)
       }
+
+      // Notify the user globally
+      toast.success("AI Summary Generated", {
+        description: "Your meeting analysis is ready to view.",
+        duration: 5000,
+      });
     }
 
     // Mind map generated
@@ -218,6 +236,12 @@ export function MeetingProvider({ children }: { children: React.ReactNode }) {
           mindMap: data.mindMap
         } : null)
       }
+
+      // Notify the user globally
+      toast.success("Mind Map Generated", {
+        description: "The visual map of your meeting is ready.",
+        duration: 5000,
+      });
     }
 
     // Participant updates
@@ -246,12 +270,17 @@ export function MeetingProvider({ children }: { children: React.ReactNode }) {
     // System notifications
     const handleSystemNotification = (data: { type: string; message: string; meetingId?: string }) => {
       console.log('System notification:', data)
-      // You could show toast notifications here
+      toast.info("System Notice", {
+        description: data.message,
+      });
     }
 
     const handleSystemError = (data: { error: string; meetingId?: string }) => {
       console.error('System error:', data)
       setError(data.error)
+      toast.error("System Error", {
+        description: data.error,
+      });
     }
 
     // Register event listeners

@@ -65,8 +65,9 @@ const io = new SocketIOServer(server, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
-  pingTimeout: 30000,
-  pingInterval: 10000,
+  // Increased for long meetings (60-70 min): prevents socket drop during slow AI/Colab calls
+  pingTimeout: 120000,   // 2 minutes (was 30s)
+  pingInterval: 25000,   // 25 seconds (was 10s)
   transports: ['websocket', 'polling'],
 });
 
@@ -101,9 +102,10 @@ app.use(cors({
 }));
 
 // Rate limiting
+// A 70-min meeting at 1 audio chunk/10s = ~420 requests, so default must be well above that.
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '2000'), // 2000 req/window to support long meetings
   message: {
     error: 'Too many requests from this IP, please try again later.',
   },
@@ -113,9 +115,9 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middleware — 50mb to support large transcript payloads from long meetings
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Request logging
 app.use(requestLogger);
@@ -251,6 +253,10 @@ const startServer = async (): Promise<void> => {
       logger.info(`💾 Database: SQLite (${process.env.DATABASE_URL})`);
       logger.info(`🔍 Health check: http://localhost:${PORT}/health`);
     });
+
+    // Increase HTTP server timeouts to support long AI/Colab summary calls (up to 10 min)
+    server.timeout = 600000;        // 10 minutes
+    server.headersTimeout = 620000; // slightly longer than server.timeout
   } catch (error) {
     logger.error('Failed to start server', { error });
     process.exit(1);

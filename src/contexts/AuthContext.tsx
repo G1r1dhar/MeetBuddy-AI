@@ -79,6 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUsers([])
       } finally {
         setLoading(false)
+        // Ensure starting theme is based on user preference or dark
+        document.documentElement.classList.add('dark')
       }
     }
 
@@ -206,9 +208,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const toggleDarkMode = () => {
-    // Dark mode is now permanently enabled
-    return
+    if (user) {
+      const newDarkMode = !user.darkMode
+      setUser({ ...user, darkMode: newDarkMode })
+    }
   }
+
+  useEffect(() => {
+    if (user?.darkMode !== false) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [user?.darkMode])
 
   const updateNotificationSettings = async (notifications: User["notifications"]) => {
     if (user) {

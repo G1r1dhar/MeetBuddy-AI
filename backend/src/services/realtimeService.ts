@@ -330,14 +330,23 @@ export class RealtimeService {
    */
   async generateAndBroadcastSummary(meetingId: string, userId: string): Promise<void> {
     try {
-      // Notify participants that summary generation started
+      // Notify participants that summary generation has started
       this.io.to(`meeting:${meetingId}`).emit('summary-generation-started', {
         meetingId,
         startedBy: userId,
         timestamp: new Date().toISOString(),
       });
 
-      // Generate summary
+      // Emit early progress event so the frontend shows a spinner for long meetings.
+      // For 60-70 min transcripts the map-reduce can take 3-5 minutes.
+      this.io.to(`meeting:${meetingId}`).emit('summary-progress', {
+        meetingId,
+        status: 'generating',
+        message: 'Analysing transcript — this may take a few minutes for long meetings…',
+        timestamp: new Date().toISOString(),
+      });
+
+      // Generate summary (may take several minutes for long transcripts)
       const summary = await this.summaryService.generateSummaryForMeeting(meetingId, userId);
 
       // Broadcast completed summary to all participants

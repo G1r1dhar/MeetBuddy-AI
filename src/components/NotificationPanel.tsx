@@ -60,22 +60,22 @@ export default function NotificationPanel() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'meeting': return <Calendar className="w-4 h-4 text-blue-500" />;
+      case 'meeting': return <Calendar className="w-4 h-4 text-theme-accent" />;
       case 'reminder': return <Clock className="w-4 h-4 text-orange-500" />;
       case 'system': return <Info className="w-4 h-4 text-purple-500" />;
-      default: return <Bell className="w-4 h-4 text-gray-500" />;
+      default: return <Bell className="w-4 h-4 text-theme-icon" />;
     }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 transition-colors duration-300">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Bell className="w-5 h-5 text-gray-600" />
-          <span className="font-medium text-gray-900">Notifications</span>
+          <Bell className="w-5 h-5 text-theme-icon" />
+          <span className="font-medium text-theme-text">Notifications</span>
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
               {unreadCount}
@@ -85,7 +85,7 @@ export default function NotificationPanel() {
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors"
+            className="text-sm text-theme-accent hover:brightness-110 transition-colors"
           >
             Mark all as read
           </button>
@@ -93,19 +93,19 @@ export default function NotificationPanel() {
       </div>
 
       {/* Notifications List */}
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
         {notifications.length === 0 ? (
           <div className="text-center py-8">
-            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No notifications yet</p>
+            <Bell className="w-12 h-12 text-theme-icon opacity-50 mx-auto mb-3" />
+            <p className="text-theme-text/60">No notifications yet</p>
           </div>
         ) : (
           notifications.map(notification => (
             <div
               key={notification.id}
               className={`p-4 rounded-lg border transition-all cursor-pointer ${notification.read
-                ? 'bg-gray-50 border-gray-200'
-                : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                ? 'bg-theme-bg border-theme-card-border'
+                : 'bg-theme-accent/5 border-theme-accent/20 hover:bg-theme-accent/10'
                 }`}
               onClick={() => markAsRead(notification.id)}
             >
@@ -115,29 +115,29 @@ export default function NotificationPanel() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h4 className={`text-sm font-medium ${notification.read ? 'text-gray-700' : 'text-gray-900'
+                    <h4 className={`text-sm font-medium ${notification.read ? 'text-theme-text/70' : 'text-theme-text'
                       }`}>
                       {notification.title}
                     </h4>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-theme-text/50">
                       {new Intl.DateTimeFormat('en-US', {
                         hour: '2-digit',
                         minute: '2-digit'
                       }).format(notification.timestamp)}
                     </span>
                   </div>
-                  <p className={`text-sm ${notification.read ? 'text-gray-500' : 'text-gray-700'
+                  <p className={`text-sm ${notification.read ? 'text-theme-text/60' : 'text-theme-text/90'
                     }`}>
                     {notification.message}
                   </p>
                   {notification.actionUrl && (
-                    <button className="text-xs text-indigo-600 hover:text-indigo-700 mt-2 transition-colors">
+                    <button className="text-xs text-theme-accent hover:brightness-110 mt-2 transition-colors">
                       View Details →
                     </button>
                   )}
                 </div>
                 {!notification.read && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                  <div className="w-2 h-2 bg-theme-accent rounded-full mt-2" />
                 )}
               </div>
             </div>
@@ -146,24 +146,24 @@ export default function NotificationPanel() {
       </div>
 
       {/* Notification Settings */}
-      <div className="border-t border-gray-200 pt-4">
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Notification Preferences</h4>
+      <div className="border-t border-theme-card-border pt-4">
+        <h4 className="text-sm font-medium text-theme-text mb-3">Notification Preferences</h4>
         <div className="space-y-2">
           <label className="flex items-center">
-            <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" defaultChecked />
-            <span className="ml-2 text-sm text-gray-700">Meeting reminders</span>
+            <input type="checkbox" className="rounded border-theme-card-border bg-theme-bg text-theme-accent focus:ring-theme-accent" defaultChecked />
+            <span className="ml-2 text-sm text-theme-text/80">Meeting reminders</span>
           </label>
           <label className="flex items-center">
-            <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" defaultChecked />
-            <span className="ml-2 text-sm text-gray-700">AI summary notifications</span>
+            <input type="checkbox" className="rounded border-theme-card-border bg-theme-bg text-theme-accent focus:ring-theme-accent" defaultChecked />
+            <span className="ml-2 text-sm text-theme-text/80">AI summary notifications</span>
           </label>
           <label className="flex items-center">
-            <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" defaultChecked />
-            <span className="ml-2 text-sm text-gray-700">System updates</span>
+            <input type="checkbox" className="rounded border-theme-card-border bg-theme-bg text-theme-accent focus:ring-theme-accent" defaultChecked />
+            <span className="ml-2 text-sm text-theme-text/80">System updates</span>
           </label>
           <label className="flex items-center">
-            <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-            <span className="ml-2 text-sm text-gray-700">Marketing emails</span>
+            <input type="checkbox" className="rounded border-theme-card-border bg-theme-bg text-theme-accent focus:ring-theme-accent" />
+            <span className="ml-2 text-sm text-theme-text/80">Marketing emails</span>
           </label>
         </div>
       </div>

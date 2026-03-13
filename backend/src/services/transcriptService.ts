@@ -533,11 +533,13 @@ export class TranscriptService {
    * Export transcripts in various formats
    */
   async exportTranscripts(meetingId: string, userId: string, format: 'json' | 'txt' | 'srt' | 'vtt') {
-    // Get all final transcripts
+    // Get all transcripts — do NOT filter by isFinal because real-time chunks
+    // from /api/whisper/audio/:meetingId are saved with isFinal:false, and we
+    // want them all present in the export for long meetings.
     const result = await this.getTranscriptsForMeeting(
       meetingId,
       userId,
-      { isFinal: true },
+      {}, // include all entries regardless of isFinal
       { limit: 10000, sortBy: 'timestamp', sortOrder: 'asc' }
     );
 

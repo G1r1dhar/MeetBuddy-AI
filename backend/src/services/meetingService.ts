@@ -58,7 +58,8 @@ export class MeetingService {
       throw new ValidationError('Meeting title is required');
     }
 
-    if (!scheduledTime || scheduledTime < new Date()) {
+    // Allow up to 5 minutes in the past to account for clock drift
+    if (!scheduledTime || scheduledTime < new Date(Date.now() - 5 * 60 * 1000)) {
       throw new ValidationError('Scheduled time must be in the future');
     }
 
@@ -196,7 +197,7 @@ export class MeetingService {
         include: {
           transcripts: {
             orderBy: { timestamp: 'asc' },
-            take: 10, // Include first 10 transcripts for preview
+            take: 1000, // Load all transcripts so they persist on refresh
           },
           summaries: {
             orderBy: { generatedAt: 'desc' },
@@ -288,11 +289,54 @@ export class MeetingService {
     await meetingCache.set(meetingId, meeting);
 
     // Convert BigInt values to numbers for JSON serialization
+    // Parse mind map JSON string if it exists
+    let mindMap = undefined;
+    if (meeting.mindMap) {
+      try { mindMap = JSON.parse(meeting.mindMap); } catch (e) {}
+    }
+
     return {
       ...meeting,
       participants: meeting.participants ? JSON.parse(meeting.participants as string) : [],
       storageSize: Number(meeting.storageSize),
+      mindMap
     };
+  }
+
+  /**
+   * Generates a mind map using AI and saves it to the meeting
+   */
+  async generateMindMap(meetingId: string, userId: string): Promise<any> {
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: { transcripts: { orderBy: { timestamp: 'asc' } } }
+    });
+
+    if (!meeting) throw new NotFoundError('Meeting not found');
+    if (meeting.userId !== userId) throw new AuthorizationError('Not authorized');
+
+    const transcriptText = meeting.transcripts
+      .map(t => `${t.speaker}: ${t.text}`)
+      .join('\n');
+
+    if (!transcriptText) throw new ValidationError('Meeting has no transcripts yet');
+
+    // Import aiService dynamically to avoid circular dependencies
+    const { aiService } = require('./aiService');
+    
+    logger.info(`Generating Mind Map for meeting ${meetingId}`);
+    const mindMapNode = await aiService.generateMindMap({
+      transcript: transcriptText,
+      meetingTitle: meeting.title
+    });
+
+    // Save to DB
+    await prisma.meeting.update({
+      where: { id: meetingId },
+      data: { mindMap: JSON.stringify(mindMapNode) }
+    });
+
+    return mindMapNode;
   }
 
   /**
@@ -309,7 +353,7 @@ export class MeetingService {
       throw new ValidationError('Meeting title cannot be empty');
     }
 
-    if (scheduledTime !== undefined && scheduledTime < new Date()) {
+    if (scheduledTime !== undefined && scheduledTime < new Date(Date.now() - 5 * 60 * 1000)) {
       throw new ValidationError('Scheduled time must be in the future');
     }
 
@@ -444,6 +488,15 @@ export class MeetingService {
         status: 'COMPLETED',
         endTime: new Date(),
       },
+      include: {
+        transcripts: {
+          orderBy: { timestamp: 'asc' },
+        },
+        summaries: {
+          orderBy: { generatedAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     // Update cache
@@ -456,10 +509,17 @@ export class MeetingService {
       duration: (updatedMeeting.endTime?.getTime() || Date.now()) - (updatedMeeting.startTime?.getTime() || 0),
     });
 
+    // Parse mind map JSON string if it exists
+    let mindMap = undefined;
+    if ((updatedMeeting as any).mindMap) {
+      try { mindMap = JSON.parse((updatedMeeting as any).mindMap); } catch (e) {}
+    }
+
     return {
       ...updatedMeeting,
       participants: updatedMeeting.participants ? JSON.parse(updatedMeeting.participants as string) : [],
       storageSize: Number(updatedMeeting.storageSize),
+      mindMap,
     };
   }
 

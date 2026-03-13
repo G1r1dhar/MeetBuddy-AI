@@ -37,14 +37,14 @@ const createMeetingSchema = Joi.object({
   description: Joi.string().max(1000).allow('').optional(),
   platform: Joi.string().valid('GOOGLE_MEET', 'ZOOM', 'MICROSOFT_TEAMS', 'WEBEX', 'DISCORD', 'SKYPE').required(),
   meetingUrl: Joi.string().uri().optional(),
-  scheduledTime: Joi.date().iso().min('now').required(),
+  scheduledTime: Joi.date().iso().required(),
   participants: Joi.array().items(Joi.string().email()).optional(),
 });
 
 const updateMeetingSchema = Joi.object({
   title: Joi.string().min(1).max(200).optional(),
   description: Joi.string().max(1000).optional(),
-  scheduledTime: Joi.date().iso().min('now').optional(),
+  scheduledTime: Joi.date().iso().optional(),
   participants: Joi.array().items(Joi.string().email()).optional(),
   status: Joi.string().valid('SCHEDULED', 'RECORDING', 'COMPLETED', 'CANCELLED').optional(),
   recordingUrl: Joi.string().optional(),
@@ -241,6 +241,18 @@ router.get('/:id/export', asyncHandler(async (req, res) => {
   res.setHeader('Content-Type', exportData.contentType);
 
   res.send(exportData.content);
+}));
+
+// POST /api/meetings/:id/mindmap
+router.post('/:id/mindmap', asyncHandler(async (req, res) => {
+  const result = await meetingService.generateMindMap(
+    req.params.id,
+    req.user!.userId
+  );
+  res.json({
+    message: 'Mind map generated successfully',
+    data: result
+  });
 }));
 
 export { router as meetingRoutes };

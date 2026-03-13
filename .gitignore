@@ -107,3 +107,9 @@ backend/audio_req_debug.log
 # Testing
 coverage/
 .nyc_output
+
+# Python environments and large dataset files
+backend/finetune-whisper/testenv/
+backend/finetune-whisper/dataset/
+*.wav
+__pycache__/
