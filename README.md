@@ -11,7 +11,9 @@
   <img src="https://img.shields.io/github/stars/G1r1dhar/MeetBuddy-AI?style=social" alt="GitHub Stars">
 </p>
 
----
+<p align="center">
+  <video src="https://github.com/G1r1dhar/MeetBuddy-AI/raw/main/meetbuddyai_12_03_26.mp4" controls width="100%"></video>
+</p>
 
 ---
 
@@ -52,7 +54,7 @@ graph TD
 
 | Component | Technology | Role |
 | :--- | :--- | :--- |
-| **Frontend** | React 18 / Vite | Modern UI & Fast HMR |
+| **Frontend** | React 18 / Vite / Tailwind / Framer Motion | Modern UI, Styling & Animations |
 | **Backend** | Node.js / Express | Robust API & Orchestration |
 | **Real-Time** | Socket.io | Bi-directional Live Streaming |
 | **Database** | SQLite / Prisma | Lightweight & Reliable Storage |
