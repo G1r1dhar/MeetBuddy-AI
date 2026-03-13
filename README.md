@@ -11,9 +11,7 @@
   <img src="https://img.shields.io/github/stars/G1r1dhar/MeetBuddy-AI?style=social" alt="GitHub Stars">
 </p>
 
-<p align="center">
-  <img src="https://github.com/G1r1dhar/MeetBuddy-AI/raw/main/meetbuddyai_12_03_26.mp4" alt="MeetBuddy AI Demo Video" width="100%">
-</p>
+<video src="meetbuddyai_12_03_26.mp4" controls="controls" width="100%" muted="muted"></video>
 
 ---
 
